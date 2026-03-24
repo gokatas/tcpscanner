@@ -15,7 +15,7 @@ import (
 	"sort"
 )
 
-var (
+const (
 	host           = "scanme.nmap.org"
 	portRangeStart = 1
 	portRangeEnd   = 1024
@@ -24,7 +24,7 @@ var (
 
 func worker(portsToScan, portsScanned chan int) {
 	for port := range portsToScan {
-		addr := fmt.Sprintf("%s:%d", host, port)
+		addr := net.JoinHostPort(host, fmt.Sprintf("%d", port))
 		conn, err := net.Dial("tcp", addr)
 		if err != nil {
 			// closed port		syn->, <-rst
@@ -41,7 +41,7 @@ func main() {
 	portsToScan := make(chan int, nWorkers) // can hold n items before sender blocks
 	portsScanned := make(chan int)
 
-	for i := 0; i < nWorkers; i++ {
+	for range nWorkers {
 		go worker(portsToScan, portsScanned)
 	}
 
@@ -58,7 +58,7 @@ func main() {
 		if port != 0 {
 			openPorts = append(openPorts, port)
 		}
-		fmt.Printf("\r%d", i)
+		fmt.Printf("\r%d", i) // show progress
 	}
 	fmt.Printf("\n")
 
